@@ -1,0 +1,40 @@
+X = 1_00000000
+Y = X MOD G
+A,B,C < X
+
+A*Y MOD G = ( A*( X MOD G ) ) MOD G = ( (A MOD G)*(X MOD G MOD G) ) MOD G
+                                    = ( (A MDO G)*(X MOD G) ) MOD G
+                                    = A*X MOD G
+
+T1(A) = A*X MOD G = A*Y MOD G
+T2(A) = A MOD G
+
+0 MOD G = T2(0) = CRC_0 = 0
+
+A MOD G = (0*X+A) MOD G 
+        = T1(CRC_0) + T2(A) 
+        = CRC_A
+
+(A*X+B) MOD G = (A*X MOD G) + (B MOD G)
+              = (CRC_A * (X MOD G)) MOD G
+              = (CRC_A * Y) MOD G + T2(B) 
+              = T1(CRC_A) + T2(B) 
+              = CRC_B
+
+(A*X*X+B*X+C) MOD G = (((A*X*X+B*X)) MOD G) + C MOD G
+                    = ( (A*X+B) MOD G * X MOD G ) MOD G + C MOD G
+                    = ( CRC_B * Y ) MOD G + C MOD G
+                    = T1( CRC_B ) + T2(B)
+                    = CRC_C
+
+(A*X*X*X+B*X*X+C*X+D) MOD G = ( (A*X*X+B*X+C) MOD G * X MOD G ) MOD G + D MOD G
+                            = ( CRC_C * Y ) MOD G + D MOD G
+                            = T1( CRC_C ) + T2(D)
+                            = CRC_D
+
+
+n in [0,N-1]
+CRC_n = T1(0) + T2(A_n)                ...n = 0
+CRC_A_np1 = T1(CRC_A_n) + T2(A_np1)    ...n > 0
+
+
