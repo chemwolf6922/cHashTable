@@ -4,7 +4,7 @@ CFLAGS=-O3 -MMD -MP
 LDFLAGS=
 LIBS=
 
-APPSRCS=main.c crc.c
+APPSRCS=main.c crc.c staticHashTable.c
 
 all:app
 
