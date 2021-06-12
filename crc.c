@@ -9,7 +9,7 @@ uint32_t GF2_MOD(uint32_t A,uint32_t B)
     int B_lz = __builtin_clz(B);
     while(true)
     {
-        int A_remain_lz = __builtin_clz(A);
+        int A_remain_lz = A!=0?__builtin_clz(A):32;
         if(A_remain_lz > B_lz)
         {
             break;
@@ -23,7 +23,7 @@ uint32_t GF2_MOD_with_B_lz(uint32_t A,uint32_t B,int B_lz)
 {
     while(true)
     {
-        int A_remain_lz = __builtin_clz(A);
+        int A_remain_lz = A!=0?__builtin_clz(A):32;
         if(A_remain_lz > B_lz)
         {
             break;
