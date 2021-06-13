@@ -60,3 +60,29 @@ uint32_t crc_calculate(uint32_t G,uint8_t* data,size_t len)
     return crc;
 }
 
+int crc_init_crc8_cache(crc8_cache_t* cache,uint32_t G)
+{
+    int G_lz = __builtin_clz(G);
+    int X_bits = 32 - 1 - G_lz;
+    if(X_bits > 8)
+    {
+        return -1;
+    }
+    for(int i = 0;i<256;i++)
+    {
+        cache->T1[i] = crc_T1(i,G,G_lz,X_bits);
+        cache->T2[i] = crc_T2(i,G,G_lz);
+    }
+    return 0;
+}
+
+uint8_t crc8_calculate_with_cache(crc8_cache_t* cache,uint8_t* data,size_t len)
+{
+    uint8_t crc = 0;
+    for(size_t i=0;i<len;i++)
+    {
+        crc = cache->T1[crc] ^ cache->T2[data[i]];
+    }
+    return crc;
+}
+
