@@ -51,7 +51,7 @@ uint32_t crc_calculate(uint32_t G,uint8_t* data,size_t len)
     {
         return 0;
     }
-    int X_bits = 32 - 1 - G_lz;
+    int X_bits = 8;
     uint32_t crc = 0;
     for(size_t i=0;i<len;i++)
     {
@@ -63,7 +63,7 @@ uint32_t crc_calculate(uint32_t G,uint8_t* data,size_t len)
 int crc_init_crc8_cache(crc8_cache_t* cache,uint32_t G)
 {
     int G_lz = __builtin_clz(G);
-    int X_bits = 32 - 1 - G_lz;
+    int X_bits = 8;
     if(X_bits > 8)
     {
         return -1;
