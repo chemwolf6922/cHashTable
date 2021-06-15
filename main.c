@@ -2,6 +2,7 @@
 #include "staticHashTable.h"
 #include <string.h>
 #include <stdbool.h>
+#include <sys/time.h>
 #include "crc.h"
 
 int test_data[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
@@ -32,18 +33,29 @@ hash_table_item_t items[] = {
     HASH_KEY_VALUE("the_last_one",&test_data[19]),
 };
 
+void speed_test(int rounds,bool with_cache)
+{
+    static_hash_table_handle_t hash_table;
+    static_hash_table_create(&hash_table,items,LEN_ARRAY(items),with_cache);
+    int* p_value = NULL;
+    struct timeval start,stop;
+    gettimeofday(&start,NULL);
+    for(int i=0;i<rounds;i++)
+    {
+        for(int j = 0;j<LEN_ARRAY(items);j++)
+        {
+            p_value = static_hash_table_get(hash_table,items[j].key,items[j].key_len);
+        }
+    }
+    gettimeofday(&stop,NULL);
+    printf("Time: %.6fs\n",
+            ((float)(stop.tv_sec*1000000+stop.tv_usec-start.tv_sec*1000000-start.tv_usec))*0.000001);
+    static_hash_table_delete(hash_table);
+}
+
 int main(int argc, void** argv)
 {
-    // char test_str[] = "hahahaha";
-    // printf("0x%02x\n",crc_calculate(0b100000000,(uint8_t*)test_str,strlen(test_str)));
-    static_hash_table_handle_t hash_table;
-    static_hash_table_create(&hash_table,items,LEN_ARRAY(items),true);
-    int* p_value = NULL;
-    p_value = static_hash_table_get_str_key(hash_table,"hello_world");
-    if(p_value != NULL)
-    {
-        printf("value: %d\n",*p_value);
-    }
-    static_hash_table_delete(hash_table);
+    speed_test(1000000,false);
+    speed_test(1000000,true);
     return 0;
 }
