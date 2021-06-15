@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "staticHashTable.h"
 #include <string.h>
+#include <stdbool.h>
 #include "crc.h"
 
 int test_data[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
@@ -36,7 +37,7 @@ int main(int argc, void** argv)
     // char test_str[] = "hahahaha";
     // printf("0x%02x\n",crc_calculate(0b100000000,(uint8_t*)test_str,strlen(test_str)));
     static_hash_table_handle_t hash_table;
-    static_hash_table_create(&hash_table,items,LEN_ARRAY(items));
+    static_hash_table_create(&hash_table,items,LEN_ARRAY(items),true);
     int* p_value = NULL;
     p_value = static_hash_table_get_str_key(hash_table,"hello_world");
     if(p_value != NULL)

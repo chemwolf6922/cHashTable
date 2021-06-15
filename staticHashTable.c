@@ -49,16 +49,21 @@ float calculate_P_overlap(counter_8bit_t *counter, int bits)
     return ((float)overlap_counter) / ((float)counter->total);
 }
 
-uint8_t calculate_hash(uint8_t *key, size_t key_len, uint32_t G, int bits)
+uint8_t calculate_hash(uint8_t *key, size_t key_len, static_hash_table_t* hash_table)
 {
-    uint8_t hash = (uint8_t)(crc_calculate(G, key, key_len) & ((1U << bits) - 1));
-    return hash;
+    if(hash_table->crc_cache != NULL)
+    {
+        return crc8_calculate_with_cache(hash_table->crc_cache,key,key_len) & ((1U<<hash_table->bits) -1);
+    }
+    else
+    {
+        return (uint8_t)(crc_calculate(hash_table->G, key, key_len) & ((1U << hash_table->bits) - 1));
+    }
 }
 
-uint8_t calculate_hash_with_cache(uint8_t *key, size_t key_len,crc8_cache_t* crc_cache, int bits)
+uint8_t calculate_hash_raw(uint8_t *key, size_t key_len, uint32_t G,int bits)
 {
-    uint8_t hash = crc8_calculate_with_cache(crc_cache,key,key_len) & ((1U << bits) -1);
-    return hash;
+        return (uint8_t)(crc_calculate(G, key, key_len) & ((1U << bits) - 1));
 }
 
 void evaluate_hash_function(uint32_t G, hash_table_item_t *items, size_t len, hash_function_score_t *score)
@@ -68,7 +73,7 @@ void evaluate_hash_function(uint32_t G, hash_table_item_t *items, size_t len, ha
     // count all the crc values
     for (size_t i = 0; i < len; i++)
     {
-        counter.value[calculate_hash(items[i].key, items[i].key_len, G, 8)]++;
+        counter.value[calculate_hash_raw(items[i].key, items[i].key_len, G, 8)]++;
         counter.total++;
     }
     // calculate score
@@ -96,7 +101,7 @@ void evaluate_hash_function(uint32_t G, hash_table_item_t *items, size_t len, ha
     }
 }
 
-int static_hash_table_create(static_hash_table_handle_t *handle, hash_table_item_t *items, size_t len)
+int static_hash_table_create(static_hash_table_handle_t *handle, hash_table_item_t *items, size_t len,bool create_cache)
 {
     static_hash_table_t* hash_table = (static_hash_table_t*)malloc(sizeof(static_hash_table_t));
     if(hash_table == NULL)
@@ -135,14 +140,18 @@ int static_hash_table_create(static_hash_table_handle_t *handle, hash_table_item
     hash_table->bits = best_bits;
     hash_table->items = items;
     // init crc cache
-    hash_table->crc_cache = (crc8_cache_t*)malloc(sizeof(crc8_cache_t));
-    if(hash_table->crc_cache == NULL)
+    if(create_cache)
     {
-        free(hash_table);
-        *handle = NULL;
-        return -1;
+        hash_table->crc_cache = (crc8_cache_t*)malloc(sizeof(crc8_cache_t));
+        if(hash_table->crc_cache == NULL)
+        {
+            free(hash_table);
+            *handle = NULL;
+            return -1;
+        }
+        crc_init_crc8_cache(hash_table->crc_cache,hash_table->G);
     }
-    crc_init_crc8_cache(hash_table->crc_cache,hash_table->G);
+    
     // init hash map
     size_t hash_map_size = sizeof(int16_t)*(1U<<hash_table->bits);
     hash_table->hash_map = (int16_t*)malloc(hash_map_size);
@@ -157,7 +166,7 @@ int static_hash_table_create(static_hash_table_handle_t *handle, hash_table_item
     memset(hash_table->hash_map,0xFF,hash_map_size);
     for(size_t i = 0; i < len; i++)
     {
-        uint8_t hash_value = calculate_hash_with_cache(items[i].key,items[i].key_len,hash_table->crc_cache,hash_table->bits);
+        uint8_t hash_value = calculate_hash(items[i].key,items[i].key_len,hash_table);
         if(hash_table->hash_map[hash_value]!=-1)
         {
             hash_table_item_t* item = &items[hash_table->hash_map[hash_value]];
@@ -196,7 +205,7 @@ void *static_hash_table_get(static_hash_table_handle_t handle, uint8_t *key, siz
         return NULL;
     }
     static_hash_table_t* hash_table = (static_hash_table_t*)handle;
-    uint8_t hash_value = calculate_hash_with_cache(key,key_len,hash_table->crc_cache,hash_table->bits);
+    uint8_t hash_value = calculate_hash(key,key_len,hash_table);
     int16_t index = hash_table->hash_map[hash_value];
     if(index == -1)
     {
