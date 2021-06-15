@@ -192,8 +192,14 @@ int static_hash_table_delete(static_hash_table_handle_t handle)
         return -1;
     }
     static_hash_table_t* hash_table = (static_hash_table_t*)handle;
-    free(hash_table->hash_map);
-    free(hash_table->crc_cache);
+    if(hash_table->hash_map != NULL)
+    {
+        free(hash_table->hash_map);
+    }
+    if(hash_table->crc_cache != NULL)
+    {
+        free(hash_table->crc_cache);
+    }
     free(hash_table);
     return 0;
 }
